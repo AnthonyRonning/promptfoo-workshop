@@ -9,6 +9,7 @@ prompts:
 providers:
   - "openai:gpt-4o-mini"
   - "openai:gpt-4o"
+  - "google:gemini-1.5-flash-8b"
 
 # Load tests from the original CSV file without modification
 tests: file:///Users/tony/Dev/Personal/promptfoo-workshop/imdb_sample.csv
