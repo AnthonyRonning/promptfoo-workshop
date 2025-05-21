@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "IMDB Dataset Sentiment Analysis Evaluation"
+
+prompts:
+  - "Determine if the following movie review expresses a positive or negative opinion. Reply with exactly one word: 'positive' or 'negative'.\n\nReview: {{text}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+# Use simpler test format for CSV testing
+tests:
+  # Include a small number of test cases for quicker evaluation
+  - vars:
+      text: "***SPOILERS*** ***SPOILERS*** Are all teen slasher flicks suffering from a drought of originality? It awfully seems so. First of all, this is a noble premise that could've been utilized well. A rejected young nerd who grows up, stalks and murders all the girls who tortured the hell out of him when he was in junior high? Can't say you had nothing to work with. But this film goes through the same motions as all the other recent slashers. Everything from the score to the camera angles allow us to predict exactly when a false alarm is coming and exactly when the killer will strike. We know the pattern by now. These stupid slasher movies push the credibility envelope more and more by the minute. Let me ask you something: Who, in their right mind, is going to surprise a friend of theirs in a dark, dreary morgue in the middle of the night and just surprise her out of the blue while she's all alone and surrounded by corpses? Does that make any damn sense at all?"
+      expected_sentiment: "negative"  # From CSV label 0
+
+  - vars:
+      text: "I saw this when on The Wonderful World of Disney as a kid, so I didn't recall much of it. As I watched it recently, I sat there thinking, \"This is the weirdest thing I've seen\". The 'traveling' scenes look like something caused by an LSD overdose. The animated characters are mostly oddly colored/voiced versions of Jungle Book and Robin Hood characters. Some not-so-Disney things I noticed: kids being threatened at knife point and prostitutes(during the Portobello Road song). It was very entertaining, though the musical numbers were long and I can see little kids getting bored with them. Also, the subject manner was a bit dark, seeing as it was set during WW2."
+      expected_sentiment: "positive"  # From CSV label 1
+
+  - vars:
+      text: "A good picture is worth all the words. This film has the most poetic scene ever dreamed of about people with Down's syndrome. And I won't spoil it by telling you. You'll want to see it yourself. Pasqual Duquenne is an amazing actor. I did not need to understand a single word he said to understand his meaning. The film has a magic of it's own. After watching it I understood better that we put too much value on achievement and not enough on the people we love. Passion and simplicity is all we need."
+      expected_sentiment: "positive"  # From CSV label 1
+
+  - vars:
+      text: "This is the worst movie I have ever seen, and I have seen quite a few movies. It is passed off as an art film, but it is really a piece of trash. It's one redeeming quality is the beautiful tango dancing, but that cannot make up for Sally Potter's disgustingly obvious tribute to herself. The plot of this movie is nonexistent, and I guarantee you will start laughing by the end. Especially where she starts singing. It's absolutely unreal."
+      expected_sentiment: "negative"  # From CSV label 0
+
+  - vars:
+      text: "The plot had some wretched, unbelievable twists. However, the chemistry between Mel Brooks and Leslie Ann Warren was excellent. The insight that she comes to, \"There are just moments,\" provides a philosophical handle by which anyone could pick up, and embrace, life. That was one of several moments that were wonderfully memorable."
+      expected_sentiment: "positive"  # From CSV label 1
+      
+defaultTest:
+  assert:
+    # Check for exact format ("positive" or "negative")
+    - type: regex
+      value: "^(positive|negative)$"
+      ignoreCase: true
+      
+    # Check if the model output matches the expected sentiment
+    - type: javascript
+      value: |
+        // Simple direct comparison with the expected sentiment
+        const modelOutput = output.toLowerCase().trim();
+        const expected = vars.expected_sentiment;
+        return modelOutput === expected ? 1 : 0;

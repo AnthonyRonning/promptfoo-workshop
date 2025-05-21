@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Content Generation Evaluation"
+
+prompts:
+  - "Write a blog post introduction about {{topic}} targeting beginners."
+  - "Write a blog post introduction about {{topic}} that will capture the reader's attention with an interesting statistic or fact."
+  - "Write a blog post introduction about {{topic}} that tells a relatable story to hook the reader."
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Check readability (Flesch-Kincaid approximation)
+    - type: javascript
+      value: |
+        function calculateReadability(text) {
+          const sentences = text.split(/[.!?]+/).filter(Boolean).length;
+          const words = text.split(/\s+/).filter(Boolean).length;
+          const syllables = text.replace(/[^aeiouy]/gi, '').length;
+          
+          // Simplified Flesch-Kincaid formula (higher is more readable)
+          const score = 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words);
+          
+          // Score between 0-1, where 1 is very readable (60-100 on Flesch scale)
+          return Math.min(1, Math.max(0, (score - 30) / 70));
+        }
+        return calculateReadability(output);
+    
+    # No grammar errors
+    - type: llm-rubric
+      value: "check for any grammar, spelling, or punctuation errors"
+    
+    # Check length (not too short, not too long)
+    - type: javascript
+      value: |
+        const words = output.split(/\s+/).filter(Boolean).length;
+        // Penalize if too short (<75 words) or too long (>200 words)
+        if (words < 75) return words / 75;
+        if (words > 200) return Math.max(0, 1 - ((words - 200) / 100));
+        return 1;
+
+tests:
+  - vars:
+      topic: "artificial intelligence"
+    assert:
+      # Check for beginner-friendly terminology
+      - type: llm-rubric
+        value: "evaluate how well this introduction explains AI using beginner-friendly terminology"
+      # Check for fearmongering
+      - type: llm-rubric
+        value: "ensure the introduction doesn't include fearmongering or exaggerated claims about AI"
+
+  - vars:
+      topic: "sustainable gardening"
+    assert:
+      # Check for practical value
+      - type: llm-rubric
+        value: "does the introduction indicate practical value for the reader?"
+      # Check for inclusion of environmental impact
+      - type: javascript
+        value: |
+          const environmentalTerms = [
+            'environment', 'sustainable', 'eco-friendly', 'planet', 'green',
+            'conservation', 'carbon', 'climate', 'earth', 'natural', 'organic'
+          ];
+          const count = environmentalTerms.filter(term => 
+            output.toLowerCase().includes(term.toLowerCase())
+          ).length;
+          return Math.min(1, count / 3);
+
+  - vars:
+      topic: "personal finance for beginners"
+    assert:
+      # Check for engagement without overwhelming
+      - type: llm-rubric
+        value: "evaluate how well the introduction engages the reader without overwhelming them with financial jargon"
+      # Check for inclusion of key finance concepts
+      - type: javascript
+        value: |
+          const financeTerms = [
+            'budget', 'saving', 'invest', 'debt', 'credit', 'income',
+            'expense', 'financial', 'money', 'plan', 'goal'
+          ];
+          const count = financeTerms.filter(term => 
+            output.toLowerCase().includes(term.toLowerCase())
+          ).length;
+          return Math.min(1, count / 3);
+
+  - vars:
+      topic: "remote work productivity"
+    assert:
+      # Check for actionable advice indication
+      - type: llm-rubric
+        value: "does the introduction promise actionable advice in the rest of the article?"
+      # Check for relatability
+      - type: llm-rubric
+        value: "evaluate how relatable this introduction would be to someone struggling with remote work productivity"

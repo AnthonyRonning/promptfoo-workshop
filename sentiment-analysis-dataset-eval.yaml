@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "IMDB Dataset Sentiment Analysis Evaluation"
+
+prompts:
+  - "Determine if the following movie review expresses a positive or negative opinion. Reply with exactly one word: 'positive' or 'negative'.\n\nReview: {{text}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+# Load test cases from CSV file
+tests: 
+  - file:///Users/tony/Dev/Personal/promptfoo-workshop/imdb_sample.csv
+
+# Add custom assertions via defaultTest
+vars:
+  # Map the CSV label directly to expected output
+  # CSV 'label' column: 0 = negative, 1 = positive
+  expectedMap:
+    0: "negative"
+    1: "positive"
+
+defaultTest:
+  assert:
+    # Check for exact format "positive" or "negative"
+    - type: regex
+      value: "^(positive|negative)$"
+      ignoreCase: true
+    
+    # Check sentiment accuracy using a custom evaluator
+    - type: custom-evaluator
+      value: |
+        function evaluate(output, testCase) {
+          const modelOutput = output.toLowerCase().trim();
+          // In testCase, 'vars' contains the variables from the current test,
+          // including the 'label' from the CSV
+          const expected = testCase.vars.label === '1' ? 'positive' : 'negative';
+          
+          if (modelOutput === expected) {
+            return {
+              score: 1,
+              reason: `Correct sentiment classification: ${expected}`
+            };
+          } else {
+            return {
+              score: 0,
+              reason: `Incorrect sentiment classification. Expected: ${expected}, Got: ${modelOutput}`
+            };
+          }
+        }

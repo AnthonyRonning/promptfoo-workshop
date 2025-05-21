@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Code Generation Evaluation"
+
+prompts:
+  - "Write a {{language}} function that {{task}}. Include comments explaining your implementation."
+  - "Create a simple, efficient {{language}} function that {{task}}. Optimize for readability."
+  - "Write a {{language}} function that {{task}}. The function should handle edge cases and include appropriate error handling."
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Check for syntax errors (generic check)
+    - type: llm-rubric
+      value: "check for any syntax errors in the generated code"
+    
+    # Check code documentation
+    - type: llm-rubric
+      value: "evaluate the quality and helpfulness of the code comments and documentation"
+
+tests:
+  - vars:
+      language: "JavaScript"
+      task: "calculates the Fibonacci sequence up to n terms"
+    assert:
+      # Check for correctness
+      - type: llm-rubric
+        value: "verify that the function correctly implements the Fibonacci sequence algorithm"
+      # Check for edge cases
+      - type: llm-rubric
+        value: "assess how well the function handles edge cases like n=0, n=1, and negative values of n"
+      # Check for performance
+      - type: llm-rubric
+        value: "evaluate the time and space complexity of the solution"
+
+  - vars:
+      language: "Python"
+      task: "finds the most frequent element in a list"
+    assert:
+      # Check for Pythonic code
+      - type: llm-rubric
+        value: "evaluate how well the code follows Python best practices and idioms"
+      # Check for edge cases
+      - type: llm-rubric
+        value: "verify that the function handles empty lists, ties, and lists with non-hashable elements"
+      # Check for imports
+      - type: javascript
+        value: |
+          const commonLibraries = ['collections', 'counter', 'defaultdict', 'dict'];
+          let foundLibrary = false;
+          for (const lib of commonLibraries) {
+            if (output.toLowerCase().includes(`import ${lib}`) || 
+                output.toLowerCase().includes(`from ${lib}`)) {
+              foundLibrary = true;
+              break;
+            }
+          }
+          return foundLibrary ? 1 : 0.5;
+
+  - vars:
+      language: "SQL"
+      task: "returns the top 5 customers who have spent the most money, along with their total purchase amount"
+    assert:
+      # Check for query structure
+      - type: llm-rubric
+        value: "assess the structure and readability of the SQL query"
+      # Check for SQL best practices
+      - type: llm-rubric
+        value: "verify that the SQL query follows best practices for performance"
+      # Check for correct SQL syntax elements
+      - type: javascript
+        value: |
+          const requiredElements = [
+            'select', 'from', 'group by', 'order by', 'limit', 'sum'
+          ];
+          const lowerOutput = output.toLowerCase();
+          const foundElements = requiredElements.filter(element => 
+            lowerOutput.includes(element)
+          );
+          return foundElements.length / requiredElements.length;
+
+  - vars:
+      language: "Java"
+      task: "implements a simple thread-safe cache with expiration"
+    assert:
+      # Check for thread safety
+      - type: llm-rubric
+        value: "evaluate how well the implementation ensures thread safety"
+      # Check for proper expiration handling
+      - type: llm-rubric
+        value: "assess the cache expiration mechanism and its effectiveness"
+      # Check for Java conventions
+      - type: llm-rubric
+        value: "verify that the code follows standard Java naming conventions and design patterns"

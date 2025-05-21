@@ -1,0 +1,99 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "IMDB Review Sentiment Analysis Evaluation"
+
+prompts:
+  - "Analyze the sentiment of the following movie review. Is it positive or negative? Reply with either 'positive' or 'negative' only.\n\nReview: {{review}}"
+  - "Determine if the following movie review expresses a positive or negative opinion about the film. Answer with only 'positive' or 'negative'.\n\nReview: {{review}}"
+  - "Read the following movie review and classify its sentiment. Does the reviewer like or dislike the movie? Answer with a single word: 'positive' or 'negative'.\n\nReview: {{review}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Check for proper response format (only "positive" or "negative")
+    - type: regex
+      value: "^(positive|negative)$"
+      ignoreCase: true
+
+tests:
+  # The IMDB dataset uses 0 for negative sentiment and 1 for positive sentiment
+  # We'll create test cases using reviews from the provided CSV
+
+  - vars:
+      review: "***SPOILERS*** ***SPOILERS*** Are all teen slasher flicks suffering from a drought of originality? It awfully seems so. First of all, this is a noble premise that could've been utilized well. A rejected young nerd who grows up, stalks and murders all the girls who tortured the hell out of him when he was in junior high? Can't say you had nothing to work with. But this film goes through the same motions as all the other recent slashers. Everything from the score to the camera angles allow us to predict exactly when a false alarm is coming and exactly when the killer will strike. We know the pattern by now. These stupid slasher movies push the credibility envelope more and more by the minute. Let me ask you something: Who, in their right mind, is going to surprise a friend of theirs in a dark, dreary morgue in the middle of the night and just surprise her out of the blue while she's all alone and surrounded by corpses? Does that make any damn sense at all? \"Valentine\" is only occasionally innovative. One good shot involves the butchering of Denise Richards' character. She gets trapped inside a pool and the killer pokes at her with a chainsaw. There's some good songs in the soundtrack, including one cool track by Orgy. The music video is contained in the special features section on the DVD. Even the acting is mediocre at best. The actors all sleep through their roles. Of course, David Boreanaz is often stoic, even in his portrayal as the title character on \"Angel.\" Denise Richards is a fine actress, though, and she keeps a stoneface throughout the movie. \"Valentine\" is just like you'd expect: pretentious, implausible, forgettable, cheesy and without a good scare in sight. Don't even bother. My score: 4 (out of 10)"
+      true_label: "negative"
+    assert:
+      # Check if the model correctly identifies negative sentiment
+      - type: contains
+        value: "negative"
+        ignoreCase: true
+      # Check that the response correctly matches the label from the dataset
+      - type: javascript
+        value: |
+          // Convert model output to lowercase and check against expected sentiment
+          const modelOutput = output.toLowerCase().trim();
+          const expected = "negative"; // This matches the 0 in the dataset
+          return modelOutput === expected ? 1 : 0;
+
+  - vars:
+      review: "I saw this when on The Wonderful World of Disney as a kid, so I didn't recall much of it. As I watched it recently, I sat there thinking, \"This is the weirdest thing I've seen\". The 'traveling' scenes look like something caused by an LSD overdose. The animated characters are mostly oddly colored/voiced versions of Jungle Book and Robin Hood characters. Some not-so-Disney things I noticed: kids being threatened at knife point and prostitutes(during the Portobello Road song). It was very entertaining, though the musical numbers were long and I can see little kids getting bored with them. Also, the subject manner was a bit dark, seeing as it was set during WW2."
+      true_label: "positive"
+    assert:
+      # Check if the model correctly identifies positive sentiment
+      - type: contains
+        value: "positive"
+        ignoreCase: true
+      # Check that the response correctly matches the label from the dataset
+      - type: javascript
+        value: |
+          const modelOutput = output.toLowerCase().trim();
+          const expected = "positive"; // This matches the 1 in the dataset
+          return modelOutput === expected ? 1 : 0;
+
+  - vars:
+      review: "This is the worst movie I have ever seen, and I have seen quite a few movies. It is passed off as an art film, but it is really a piece of trash. It's one redeeming quality is the beautiful tango dancing, but that cannot make up for Sally Potter's disgustingly obvious tribute to herself. The plot of this movie is nonexistent, and I guarantee you will start laughing by the end. Especially where she starts singing. It's absolutely unreal."
+      true_label: "negative"
+    assert:
+      # Check if the model correctly identifies negative sentiment
+      - type: contains
+        value: "negative"
+        ignoreCase: true
+      # Check that the response correctly matches the label from the dataset
+      - type: javascript
+        value: |
+          const modelOutput = output.toLowerCase().trim();
+          const expected = "negative"; // This matches the 0 in the dataset
+          return modelOutput === expected ? 1 : 0;
+
+  - vars:
+      review: "A good picture is worth all the words. This film has the most poetic scene ever dreamed of about people with Down's syndrome. And I won't spoil it by telling you. You'll want to see it yourself. Pasqual Duquenne is an amazing actor. I did not need to understand a single word he said to understand his meaning. The film has a magic of it's own. After watching it I understood better that we put too much value on achievement and not enough on the people we love. Passion and simplicity is all we need."
+      true_label: "positive"
+    assert:
+      # Check if the model correctly identifies positive sentiment
+      - type: contains
+        value: "positive"
+        ignoreCase: true
+      # Check that the response correctly matches the label from the dataset
+      - type: javascript
+        value: |
+          const modelOutput = output.toLowerCase().trim();
+          const expected = "positive"; // This matches the 1 in the dataset
+          return modelOutput === expected ? 1 : 0;
+
+  - vars:
+      review: "Although the production and Jerry Jameson's direction are definite improvements, \"Airport '77\" isn't much better than \"Airport 1975\": slick, commercial rubbish submerging (this time literally) a decent cast. Jack Lemmon is the pilot of a packed airliner which gets hijacked by art thieves and crashes into the sea (all the publicity claimed it was near the Bermuda Triangle, but there's no mention of it in the film itself). When the rescue ships come to raise the airplane out of the water, we see all their cranes dropping (rather blindly) into the ocean and it's hard not to laugh (imagining the cranes plugging the plane, the passengers and the waterlogged script). NBC used to air what appeared to be the \"director's cut\", with at least an hour of extra footage--mostly flashbacks--injected into the proceedings with all the subtlety of a \"Gilligan's Island\" episode. Most exciting moment is the plane crash, and some of the players have a little fun: Lee Grant is an obnoxious drunk, Brenda Vaccaro a no-nonsense stewardess, Joseph Cotten and Olivia de Havilland are flirting oldsters. Still, the personality conflicts and the excruciating military detail eventually tear at one's patience. ** from ****"
+      true_label: "negative"
+    assert:
+      # Check if the model correctly identifies negative sentiment
+      - type: contains
+        value: "negative"
+        ignoreCase: true
+      # Check that the response correctly matches the label from the dataset
+      - type: javascript
+        value: |
+          const modelOutput = output.toLowerCase().trim();
+          const expected = "negative"; // This matches the 0 in the dataset
+          return modelOutput === expected ? 1 : 0;

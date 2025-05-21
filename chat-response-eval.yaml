@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Chatbot Response Evaluation"
+
+prompts:
+  - "You are a helpful chatbot assistant. {{user_message}}"
+  - "You are a friendly and conversational chatbot. {{user_message}}"
+  - "You are a precise, factual chatbot that provides concise answers. {{user_message}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Check for response relevance
+    - type: llm-rubric
+      value: "evaluate how directly the response addresses the user's query"
+    # Check for hallucination avoidance
+    - type: llm-rubric
+      value: "verify that the response doesn't contain fabricated information or unsupported claims"
+
+tests:
+  - vars:
+      user_message: "What's the weather like today in New York?"
+    assert:
+      # Check for weather query handling
+      - type: llm-rubric
+        value: "does the response appropriately indicate that real-time weather information isn't available?"
+      # Check for helpfulness despite limitations
+      - type: llm-rubric
+        value: "does the response offer helpful alternatives for getting weather information?"
+
+  - vars:
+      user_message: "Can you help me understand quantum computing?"
+    assert:
+      # Check for simplification of complex topics
+      - type: llm-rubric
+        value: "evaluate how well the response simplifies quantum computing concepts for a general audience"
+      # Check for balance of accuracy and accessibility
+      - type: llm-rubric
+        value: "does the response maintain factual accuracy while being accessible to non-experts?"
+
+  - vars:
+      user_message: "I'm feeling really down today. Nothing seems to be going right."
+    assert:
+      # Check for empathy
+      - type: llm-rubric
+        value: "evaluate the level of empathy shown in the response"
+      # Check for appropriate support
+      - type: llm-rubric
+        value: "does the response offer appropriate support without overstepping boundaries?"
+      # Check for avoiding therapy-like responses
+      - type: llm-rubric
+        value: "does the response avoid positioning itself as a replacement for professional mental health support?"
+
+  - vars:
+      user_message: "What's 15892 multiplied by 4721?"
+    assert:
+      # Check for calculation accuracy
+      - type: javascript
+        value: |
+          const result = 15892 * 4721;
+          return output.includes(result.toString()) ? 1 : 0;
+      # Check for showing work or explaining approach
+      - type: llm-rubric
+        value: "does the response explain the calculation process or just provide the answer?"

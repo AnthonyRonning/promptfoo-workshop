@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Customer Service Response Evaluation"
+
+prompts:
+  - "You're a customer service representative. Respond politely to this customer inquiry: {{inquiry}}"
+  - "You're a customer service representative for a premium brand. Respond professionally to this customer inquiry: {{inquiry}}"
+  - "You're a customer service representative with a friendly personality. Respond warmly to this customer inquiry: {{inquiry}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Ensure response doesn't contain apologies that aren't needed
+    - type: llm-rubric
+      value: "ensure the response doesn't include unnecessary apologies"
+    # Verify that response is professional
+    - type: llm-rubric
+      value: "ensure the response maintains a professional tone"
+    # Check reading level (not too complex)
+    - type: javascript
+      value: |
+        function calculateReadingLevel(text) {
+          // Simple approximation of reading level based on sentence and word length
+          const sentences = text.split(/[.!?]+/).filter(Boolean);
+          const words = text.split(/\s+/).filter(Boolean);
+          const avgWordsPerSentence = words.length / sentences.length;
+          const avgWordLength = words.join('').length / words.length;
+          return (avgWordsPerSentence * 0.39) + (avgWordLength * 5.8) - 15.59;
+        }
+        const readingLevel = calculateReadingLevel(output);
+        // Score decreases as reading level goes over 10 (aiming for 8th-10th grade level)
+        return readingLevel > 12 ? 0 : readingLevel > 10 ? 0.5 : 1;
+
+tests:
+  - vars:
+      inquiry: "I received my order yesterday but it's the wrong color. I ordered blue but received red. Can you help me exchange it?"
+    assert:
+      # Check for solution-oriented response
+      - type: llm-rubric
+        value: "does the response clearly offer a practical solution for exchanging the item?"
+      # Check for empathy
+      - type: llm-rubric
+        value: "rate the level of empathy in this response on a scale of 1-10"
+
+  - vars:
+      inquiry: "Your website says the item is in stock but I can't add it to my cart. I've been trying for hours and it's extremely frustrating!"
+    assert:
+      # Check for de-escalation
+      - type: llm-rubric
+        value: "evaluate how well the response de-escalates the customer's frustration"
+      # Ensure there's a clear next step
+      - type: llm-rubric
+        value: "does the response include clear steps to resolve the issue?"
+
+  - vars:
+      inquiry: "Do you offer international shipping? If so, what are the rates for shipping to Japan?"
+    assert:
+      # Verify information providing
+      - type: llm-rubric
+        value: "does the response appropriately indicate that specific shipping information isn't available and suggest where to find it?"
+      # Check for additional helpful info
+      - type: javascript
+        value: |
+          const helpfulPhrases = [
+            'customer service',
+            'contact',
+            'reach out',
+            'shipping page',
+            'shipping policy',
+            'website',
+            'additional information'
+          ];
+          const foundPhrases = helpfulPhrases.filter(phrase => 
+            output.toLowerCase().includes(phrase.toLowerCase())
+          );
+          return foundPhrases.length >= 2 ? 1 : foundPhrases.length >= 1 ? 0.5 : 0;
+
+  - vars:
+      inquiry: "I've been a loyal customer for years and I'm very disappointed with your recent price increases. Everything costs more but the quality seems lower."
+    assert:
+      # Check for value reinforcement
+      - type: llm-rubric
+        value: "does the response acknowledge the customer's loyalty and reinforce the value of the product/service?"
+      # Ensure no defensiveness
+      - type: llm-rubric
+        value: "ensure the response doesn't sound defensive about the price increases"

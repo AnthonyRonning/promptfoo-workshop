@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "IMDB Sentiment Analysis with Original CSV"
+
+prompts:
+  - "Determine if the following movie review expresses a positive or negative opinion. Reply with exactly one word: 'positive' or 'negative'.\n\nReview: {{text}}"
+  - "Is this movie review positive or negative? Answer with a single word: 'positive' or 'negative'.\n\nReview: {{text}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+# Load tests from the original CSV file without modification
+tests: file:///Users/tony/Dev/Personal/promptfoo-workshop/imdb_sample.csv
+
+# Define default assertions for all test cases
+defaultTest:
+  assert:
+    # Use case-insensitive pattern matching to check for correct response format
+    - type: icontains-any
+      value: ["positive", "negative"]
+    
+    # Use our custom evaluator to check if sentiment matches the expected label
+    - type: javascript
+      value: file:///Users/tony/Dev/Personal/promptfoo-workshop/imdb-sentiment-evaluator.js

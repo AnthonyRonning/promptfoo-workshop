@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "RAG System Evaluation"
+
+prompts:
+  - "Answer the following question based on the provided context. If the context doesn't contain the answer, say so.\n\nContext: {{context}}\n\nQuestion: {{question}}"
+  - "You are a helpful assistant that answers questions based on the provided information. Use only the context provided to answer the question. If the answer cannot be found in the context, acknowledge this.\n\nContext: {{context}}\n\nQuestion: {{question}}"
+  - "Given the following context, please answer the question. Stick strictly to what's mentioned in the context and avoid making assumptions or adding outside information.\n\nContext: {{context}}\n\nQuestion: {{question}}"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+defaultTest:
+  assert:
+    # Check for grounding in context
+    - type: llm-rubric
+      value: "evaluate how well the response is grounded in the provided context"
+    # Check for hallucination avoidance
+    - type: llm-rubric
+      value: "check if the response contains any information not present in the context"
+
+tests:
+  - vars:
+      context: "SpaceX was founded in 2002 by Elon Musk with the goal of reducing space transportation costs and enabling the colonization of Mars. The company's first successful orbital launch of its Falcon 1 rocket occurred in 2008. In 2012, SpaceX's Dragon spacecraft became the first commercial spacecraft to deliver cargo to the International Space Station. In 2020, SpaceX successfully launched astronauts to the ISS aboard its Crew Dragon spacecraft, marking the first time a private company had sent humans into orbit."
+      question: "When did SpaceX achieve its first successful orbital launch?"
+    assert:
+      # Check for answer accuracy
+      - type: contains
+        value: "2008"
+      # Check for conciseness
+      - type: llm-rubric
+        value: "evaluate how concise the response is while still being complete"
+
+  - vars:
+      context: "The python programming language was created by Guido van Rossum and first released in 1991. Python is an interpreted, high-level, general-purpose programming language known for its readability and simple syntax. Python supports multiple programming paradigms, including procedural, object-oriented, and functional programming. It has a comprehensive standard library and a large ecosystem of third-party packages."
+      question: "Who is the creator of Python?"
+    assert:
+      # Check for answer accuracy
+      - type: contains
+        value: "Guido van Rossum"
+      # Check for staying on topic
+      - type: llm-rubric
+        value: "does the response stay focused on answering the specific question without including unnecessary information?"
+
+  - vars:
+      context: "The Great Barrier Reef is the world's largest coral reef system, composed of over 2,900 individual reefs and 900 islands stretching for over 2,300 kilometers. It is located in the Coral Sea, off the coast of Queensland, Australia. The reef structure is composed of and built by billions of tiny organisms, known as coral polyps. The Great Barrier Reef was selected as a World Heritage Site in 1981."
+      question: "What is the economic impact of the Great Barrier Reef on Australia's tourism industry?"
+    assert:
+      # Check for acknowledging information gaps
+      - type: llm-rubric
+        value: "does the response clearly acknowledge that the context doesn't contain information about economic impact on tourism?"
+      # Check for avoiding making up information
+      - type: llm-rubric
+        value: "does the response avoid fabricating economic statistics or impacts not mentioned in the context?"
+
+  - vars:
+      context: "Renewable energy sources include solar, wind, hydroelectric, geothermal, and biomass. Solar power works by converting sunlight directly into electricity using photovoltaic panels or by using mirrors to concentrate solar radiation. Wind power captures the natural wind in our atmosphere and converts it into mechanical energy and then electricity. Hydroelectric power uses the flow of water to turn turbines connected to generators. Geothermal energy utilizes heat from the earth's core. Biomass converts organic materials, like wood and agricultural waste, into electricity, heat, or biofuels."
+      question: "How do solar panels work?"
+    assert:
+      # Check for detail level appropriate to context
+      - type: llm-rubric
+        value: "evaluate if the level of detail in the response matches what's available in the context"
+      # Check for technical accuracy
+      - type: llm-rubric
+        value: "does the response accurately describe how solar panels convert sunlight into electricity based on the context?"

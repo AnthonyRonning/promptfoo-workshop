@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+description: "Promptfoo Workshop Evaluations"
+
+prompts:
+  - "Write a tweet about {{topic}}"
+  - "Write a concise, funny tweet about {{topic}}"
+  - "Write a tweet about {{topic}} that would get at least 100 retweets"
+
+providers:
+  - "openai:gpt-4o-mini"
+  - "openai:gpt-4o"
+
+# These test properties are applied to every test
+defaultTest:
+  assert:
+    # Verify that the output doesn't contain "AI language model"
+    - type: not-contains
+      value: "AI language model"
+    # Verify the output is under 280 characters (Twitter limit)
+    - type: javascript
+      value: "output.length <= 280 ? 1 : 0"
+
+tests:
+  - vars:
+      topic: bananas
+    assert:
+      # Check if the output mentions the topic
+      - type: icontains
+        value: banana
+
+  - vars:
+      topic: avocado toast
+    assert:
+      # Make sure output contains the word "avocado"
+      - type: icontains
+        value: avocado
+      # Ensure it's concise
+      - type: javascript
+        value: "output.length < 180 ? 1 : 0.5"
+      # Check for humor rating
+      - type: llm-rubric
+        value: "rate how funny this tweet is on a scale from 1-10"
+
+  - vars:
+      topic: new york city
+    assert:
+      # Ensure the tweet is engaging
+      - type: llm-rubric
+        value: "ensure that the output is engaging and would appeal to a wide audience"
+      # Check for specific NYC references
+      - type: javascript
+        value: |
+          const nycReferences = ['NYC', 'Big Apple', 'Manhattan', 'Brooklyn', 'Times Square', 'Central Park', 'Broadway'];
+          const foundReferences = nycReferences.filter(ref => output.toLowerCase().includes(ref.toLowerCase()));
+          return foundReferences.length > 0 ? 1 : 0;
+
+  - vars:
+      topic: climate change
+    assert:
+      # Ensure factual accuracy
+      - type: llm-rubric
+        value: "verify that the tweet contains factually accurate information about climate change"
+      # Check for call to action
+      - type: llm-rubric
+        value: "does the tweet include a call to action?"
