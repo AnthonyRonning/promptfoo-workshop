@@ -56,7 +56,7 @@ Here are the specific commands for each evaluation:
    npx promptfoo eval -c sentiment-analysis-eval.yaml
    ```
 
-9. **Sentiment Analysis with Original CSV Data**:
+9. **IMDB Sentiment Analysis with CSV Data**:
    ```bash
    npx promptfoo eval -c imdb-csv-eval.yaml
    ```
@@ -102,9 +102,9 @@ This repository includes several evaluation examples for different use cases:
    - Evaluates movie review sentiment classification accuracy
    - Tests the model's ability to correctly identify positive and negative sentiment
 
-9. **Sentiment Analysis with Original CSV Data** (imdb-csv-eval.yaml)
+9. **IMDB Sentiment Analysis with CSV Data** (imdb-csv-eval.yaml)
    - Uses a custom JS evaluator to work with the original IMDB CSV format
-   - Demonstrates how to use custom evaluators for specialized datasets
+   - Demonstrates how to use custom evaluators with existing datasets without modification
 
 ## Running Multiple Evaluations
 
