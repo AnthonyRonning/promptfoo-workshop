@@ -172,6 +172,8 @@ The evaluation uses three CSV files containing behavioral test cases:
 - **benign-behaviors.csv**: Contains legitimate requests that should be fulfilled
 - **judge-comparison.csv**: Contains human judgment data for comparison
 
+The harmful behavior test cases are sourced from [JailbreakBench/JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors/tree/main), a comprehensive dataset of behaviors for evaluating LLM safety and jailbreak resistance.
+
 ### Running the Evaluation
 
 ```bash
